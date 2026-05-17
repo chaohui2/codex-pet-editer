@@ -7,8 +7,7 @@ import { SpriteTimeline } from './components/timeline/SpriteTimeline';
 import { GripVertical } from 'lucide-react';
 
 function App() {
-  const { pet } = useEditorStore();
-  const [panelWidth, setPanelWidth] = useState(240);
+  const { pet, panelWidth, setPanelWidth } = useEditorStore();
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -22,9 +21,9 @@ function App() {
       const containerRect = containerRef.current.getBoundingClientRect();
       const newWidth = containerRect.right - e.clientX;
       // 限制最小和最大宽度
-      setPanelWidth(Math.max(180, Math.min(500, newWidth)));
+      setPanelWidth(Math.max(180, Math.min(600, newWidth)));
     },
-    [isDragging]
+    [isDragging, setPanelWidth]
   );
 
   const handleMouseUp = useCallback(() => {

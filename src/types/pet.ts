@@ -39,6 +39,7 @@ export interface EditorState {
   onionSkinEnabled: boolean;
   onionSkinPrevFrames: number;
   onionSkinNextFrames: number;
+  panelWidth: number;
 }
 
 export const DEFAULT_PET: PetData = {

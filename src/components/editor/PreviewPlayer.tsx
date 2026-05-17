@@ -34,13 +34,15 @@ export const PreviewPlayer: React.FC = () => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 绘制洋葱皮 - 前几帧
+    // 绘制洋葱皮 - 前几帧（绿色）
     if (onionSkinEnabled) {
       for (let i = 1; i <= onionSkinPrevFrames; i++) {
         const prevFrame = frame - i;
         if (prevFrame >= 0) {
           const pos = getFramePosition(animation.row, prevFrame, pet.frameWidth, pet.frameHeight);
-          const opacity = (1 - i / (onionSkinPrevFrames + 1)) * 0.4;
+          const opacity = 0.5;
+
+          // 直接绘制半透明的前帧
           ctx.globalAlpha = opacity;
           ctx.drawImage(
             spritesheet,
@@ -56,12 +58,14 @@ export const PreviewPlayer: React.FC = () => {
         }
       }
 
-      // 绘制洋葱皮 - 后几帧
+      // 绘制洋葱皮 - 后几帧（红色）
       for (let i = 1; i <= onionSkinNextFrames; i++) {
         const nextFrame = frame + i;
         if (nextFrame < animation.frames) {
           const pos = getFramePosition(animation.row, nextFrame, pet.frameWidth, pet.frameHeight);
-          const opacity = (1 - i / (onionSkinNextFrames + 1)) * 0.4;
+          const opacity = 0.5;
+
+          // 直接绘制半透明的后帧
           ctx.globalAlpha = opacity;
           ctx.drawImage(
             spritesheet,
