@@ -47,6 +47,20 @@ export interface EditorState {
   panelWidth: number;
 }
 
+export interface NewPetAnimationConfig {
+  name: string;
+  frames: number;
+  loop: boolean;
+  description: string;
+}
+
+export interface NewPetConfig {
+  frameWidth: number;
+  frameHeight: number;
+  columns: number;
+  animations: NewPetAnimationConfig[];
+}
+
 export const DEFAULT_PET: PetData = {
   id: 'new-pet',
   displayName: 'New Pet',
@@ -72,3 +86,22 @@ export const DEFAULT_PET: PetData = {
   author: 'unknown',
   version: '1.0.0',
 };
+
+export function createBlankPet(config: NewPetConfig): PetData {
+  const rows = config.animations.length;
+  const maxFramesPerRow = Math.max(...config.animations.map(a => a.frames));
+  const actualColumns = Math.max(config.columns, maxFramesPerRow);
+
+  return {
+    ...DEFAULT_PET,
+    frameWidth: config.frameWidth,
+    frameHeight: config.frameHeight,
+    columns: actualColumns,
+    rows,
+    animations: config.animations.map((anim, index) => ({
+      ...anim,
+      row: index,
+    })),
+    frameOffsets: undefined,
+  };
+}

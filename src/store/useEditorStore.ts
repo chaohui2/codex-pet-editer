@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import { PetData, FrameOffset, EditorState } from '../types/pet';
+import { PetData, FrameOffset, EditorState, NewPetConfig, createBlankPet } from '../types/pet';
 import {
   replaceFrameInSpritesheet,
   addFrameToAnimation,
   deleteFrameFromAnimation,
   canvasToImage,
+  createBlankSpritesheet,
 } from '../utils/frameOperations';
 
 // 从 localStorage 读取洋葱皮设置
@@ -61,6 +62,7 @@ interface EditorStore extends EditorState {
   setOnionSkinNextFrames: (count: number) => void;
   setPanelWidth: (width: number) => void;
   resetEditor: () => void;
+  createNewPet: (config: NewPetConfig) => Promise<void>;
 }
 
 // 保存洋葱皮设置到 localStorage
@@ -239,4 +241,27 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       onionSkinPrevFrames: 1,
       onionSkinNextFrames: 0,
     }),
+
+  createNewPet: async (config: NewPetConfig) => {
+    const pet = createBlankPet(config);
+    const canvas = createBlankSpritesheet(
+      pet.frameWidth,
+      pet.frameHeight,
+      pet.columns,
+      pet.rows
+    );
+    const spritesheet = await canvasToImage(canvas);
+
+    set({
+      pet,
+      spritesheet,
+      selectedAnimation: pet.animations[0]?.name || null,
+      selectedFrame: 0,
+      isPlaying: false,
+      zoom: 1,
+      pan: { x: 0, y: 0 },
+      frameOffsets: new Map(),
+      alignmentStrategy: 'center',
+    });
+  },
 }));

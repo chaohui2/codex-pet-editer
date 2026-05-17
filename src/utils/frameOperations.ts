@@ -221,3 +221,46 @@ export function canvasToImage(canvas: HTMLCanvasElement): Promise<HTMLImageEleme
     img.src = canvas.toDataURL('image/png');
   });
 }
+
+/**
+ * 创建空白精灵图（透明背景）
+ * @param frameWidth 单帧宽度
+ * @param frameHeight 单帧高度
+ * @param columns 列数
+ * @param rows 行数
+ * @returns 空白 Canvas
+ */
+export function createBlankSpritesheet(
+  frameWidth: number,
+  frameHeight: number,
+  columns: number,
+  rows: number
+): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('无法创建 Canvas 上下文');
+
+  canvas.width = frameWidth * columns;
+  canvas.height = frameHeight * rows;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = 'rgba(128, 128, 128, 0.1)';
+  ctx.lineWidth = 1;
+
+  for (let col = 1; col < columns; col++) {
+    ctx.beginPath();
+    ctx.moveTo(col * frameWidth, 0);
+    ctx.lineTo(col * frameWidth, canvas.height);
+    ctx.stroke();
+  }
+
+  for (let row = 1; row < rows; row++) {
+    ctx.beginPath();
+    ctx.moveTo(0, row * frameHeight);
+    ctx.lineTo(canvas.width, row * frameHeight);
+    ctx.stroke();
+  }
+
+  return canvas;
+}

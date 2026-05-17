@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Cat, Download, X, Check } from 'lucide-react';
+import { Cat, Download, X, Check, Plus, Trash2 } from 'lucide-react';
 import { useEditorStore } from '../../store/useEditorStore';
 import {
   serializePetJson,
   createAlignedSpritesheet,
   downloadPetAsZip,
 } from '../../utils/petParser';
+import { NewPetAnimationConfig, DEFAULT_PET } from '../../types/pet';
 
 interface ExportFormData {
   id: string;
@@ -22,10 +23,31 @@ const DEFAULT_EXPORT_FORM: ExportFormData = {
   exportAligned: false,
 };
 
+interface NewPetFormData {
+  frameWidth: number;
+  frameHeight: number;
+  columns: number;
+  animations: NewPetAnimationConfig[];
+}
+
+const DEFAULT_NEW_PET_FORM: NewPetFormData = {
+  frameWidth: 192,
+  frameHeight: 208,
+  columns: 8,
+  animations: DEFAULT_PET.animations.map(a => ({
+    name: a.name,
+    frames: a.frames,
+    loop: a.loop,
+    description: a.description,
+  })),
+};
+
 export const Header: React.FC = () => {
-  const { pet, spritesheet, frameOffsets } = useEditorStore();
+  const { pet, spritesheet, frameOffsets, createNewPet } = useEditorStore();
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showNewDialog, setShowNewDialog] = useState(false);
   const [formData, setFormData] = useState<ExportFormData>(DEFAULT_EXPORT_FORM);
+  const [newFormData, setNewFormData] = useState<NewPetFormData>(DEFAULT_NEW_PET_FORM);
 
   // 打开对话框时，使用当前pet的数据填充表单
   useEffect(() => {
@@ -73,6 +95,12 @@ export const Header: React.FC = () => {
     setShowExportDialog(false);
   };
 
+  const handleCreateNew = async () => {
+    await createNewPet(newFormData);
+    setShowNewDialog(false);
+    setNewFormData(DEFAULT_NEW_PET_FORM);
+  };
+
   return (
     <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -87,9 +115,18 @@ export const Header: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowNewDialog(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            title="新建宠物"
+          >
+            <Plus size={18} />
+            新建
+          </button>
+
           {pet && (
             <>
-              <div className="px-3 py-1 bg-gray-700 rounded text-gray-300 text-sm mr-4">
+              <div className="px-3 py-1 bg-gray-700 rounded text-gray-300 text-sm ml-2">
                 <span className="text-blue-400">{pet.displayName}</span>
                 <span className="text-gray-500 mx-2">·</span>
                 <span>{pet.frameWidth} × {pet.frameHeight}</span>
@@ -200,6 +237,160 @@ export const Header: React.FC = () => {
               >
                 <Check size={16} />
                 导出
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 新建对话框 */}
+      {showNewDialog && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
+              <h2 className="text-lg font-semibold text-white">新建宠物</h2>
+              <button
+                onClick={() => setShowNewDialog(false)}
+                className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 overflow-y-auto flex-1">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                    帧宽度
+                  </label>
+                  <input
+                    type="number"
+                    value={newFormData.frameWidth}
+                    onChange={(e) => setNewFormData({ ...newFormData, frameWidth: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                    帧高度
+                  </label>
+                  <input
+                    type="number"
+                    value={newFormData.frameHeight}
+                    onChange={(e) => setNewFormData({ ...newFormData, frameHeight: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                  列数（每行最大帧数）
+                </label>
+                <input
+                  type="number"
+                  value={newFormData.columns}
+                  onChange={(e) => setNewFormData({ ...newFormData, columns: parseInt(e.target.value) || 0 })}
+                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  min="1"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-300">
+                    动画集合
+                  </label>
+                  <button
+                    onClick={() => setNewFormData({
+                      ...newFormData,
+                      animations: [...newFormData.animations, {
+                        name: `动画${newFormData.animations.length + 1}`,
+                        frames: 4,
+                        loop: true,
+                        description: '',
+                      }]
+                    })}
+                    className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
+                  >
+                    + 添加动画
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {newFormData.animations.map((anim, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-900/50 rounded-lg">
+                      <div className="w-6 h-6 flex items-center justify-center bg-gray-700 rounded text-gray-400 text-xs">
+                        {index}
+                      </div>
+                      <input
+                        type="text"
+                        value={anim.name}
+                        onChange={(e) => {
+                          const newAnims = [...newFormData.animations];
+                          newAnims[index] = { ...anim, name: e.target.value };
+                          setNewFormData({ ...newFormData, animations: newAnims });
+                        }}
+                        className="flex-1 px-2 py-1 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+                        placeholder="动画名称"
+                      />
+                      <input
+                        type="number"
+                        value={anim.frames}
+                        onChange={(e) => {
+                          const newAnims = [...newFormData.animations];
+                          newAnims[index] = { ...anim, frames: Math.max(1, parseInt(e.target.value) || 1) };
+                          setNewFormData({ ...newFormData, animations: newAnims });
+                        }}
+                        className="w-16 px-2 py-1 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+                        min="1"
+                      />
+                      <label className="flex items-center gap-1 text-xs text-gray-400">
+                        <input
+                          type="checkbox"
+                          checked={anim.loop}
+                          onChange={(e) => {
+                            const newAnims = [...newFormData.animations];
+                            newAnims[index] = { ...anim, loop: e.target.checked };
+                            setNewFormData({ ...newFormData, animations: newAnims });
+                          }}
+                          className="w-3 h-3 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                        />
+                        循环
+                      </label>
+                      {newFormData.animations.length > 1 && (
+                        <button
+                          onClick={() => {
+                            const newAnims = newFormData.animations.filter((_, i) => i !== index);
+                            setNewFormData({ ...newFormData, animations: newAnims });
+                          }}
+                          className="p-1 text-gray-500 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 px-5 py-4 border-t border-gray-700 bg-gray-850 rounded-b-xl">
+              <button
+                onClick={() => setShowNewDialog(false)}
+                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleCreateNew}
+                disabled={!newFormData.frameWidth || !newFormData.frameHeight || !newFormData.columns || newFormData.animations.length === 0}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
+              >
+                <Check size={16} />
+                创建
               </button>
             </div>
           </div>
