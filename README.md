@@ -104,6 +104,3 @@ src/
 └── main.tsx          # Application entry point
 ```
 
-## License
-
-MIT License
