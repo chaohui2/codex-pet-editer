@@ -12,9 +12,9 @@ const getStoredOnionSkinSettings = () => {
     // 忽略错误
   }
   return {
-    enabled: false,
-    prevFrames: 2,
-    nextFrames: 2,
+    enabled: true,
+    prevFrames: 1,
+    nextFrames: 0,
   };
 };
 
@@ -137,8 +137,8 @@ export const useEditorStore = create<EditorStore>((set) => ({
       pan: { x: 0, y: 0 },
       frameOffsets: new Map(),
       alignmentStrategy: 'center',
-      onionSkinEnabled: false,
-      onionSkinPrevFrames: 2,
-      onionSkinNextFrames: 2,
+      onionSkinEnabled: true,
+      onionSkinPrevFrames: 1,
+      onionSkinNextFrames: 0,
     }),
 }));

@@ -106,20 +106,22 @@ export const PreviewPlayer: React.FC = () => {
     // 绘制洋葱皮 - 前几帧（绿色滤镜）
     if (onionSkinEnabled) {
       for (let i = 1; i <= onionSkinPrevFrames; i++) {
-        const prevFrame = frame - i;
-        if (prevFrame >= 0) {
-          const opacity = 0.7 - (i - 1) * 0.15;
-          renderFrame(ctx, animation, prevFrame, Math.max(0.3, opacity), { r: 0, g: 255, b: 0 });
+        let prevFrame = frame - i;
+        if (prevFrame < 0) {
+          prevFrame = animation.frames + prevFrame;
         }
+        const opacity = 0.7 - (i - 1) * 0.15;
+        renderFrame(ctx, animation, prevFrame, Math.max(0.3, opacity), { r: 0, g: 255, b: 0 });
       }
 
       // 绘制洋葱皮 - 后几帧（红色滤镜）
       for (let i = 1; i <= onionSkinNextFrames; i++) {
-        const nextFrame = frame + i;
-        if (nextFrame < animation.frames) {
-          const opacity = 0.7 - (i - 1) * 0.15;
-          renderFrame(ctx, animation, nextFrame, Math.max(0.3, opacity), { r: 255, g: 0, b: 0 });
+        let nextFrame = frame + i;
+        if (nextFrame >= animation.frames) {
+          nextFrame = nextFrame - animation.frames;
         }
+        const opacity = 0.7 - (i - 1) * 0.15;
+        renderFrame(ctx, animation, nextFrame, Math.max(0.3, opacity), { r: 255, g: 0, b: 0 });
       }
     }
 
