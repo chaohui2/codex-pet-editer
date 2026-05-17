@@ -48,9 +48,9 @@ export interface EditorState {
 }
 
 export const DEFAULT_PET: PetData = {
-  id: 'juzi',
-  displayName: 'Juzi',
-  description: 'A tiny cream-and-ginger tabby kitten',
+  id: 'new-pet',
+  displayName: 'New Pet',
+  description: 'A cute desktop pet for Codex.',
   spritesheetPath: 'spritesheet.webp',
   frameWidth: 192,
   frameHeight: 208,
@@ -68,7 +68,7 @@ export const DEFAULT_PET: PetData = {
     { name: '奔跑', row: 7, frames: 6, loop: true, description: '向前奔跑' },
     { name: '观察', row: 8, frames: 6, loop: true, description: '审视/观察状态' },
   ],
-  tags: ['cat', 'kitten', 'cute', 'orange'],
+  tags: ['pet', 'cute'],
   author: 'unknown',
   version: '1.0.0',
 };

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Cat, FileJson, Image, Download, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Cat, Download, X, Check } from 'lucide-react';
 import { useEditorStore } from '../../store/useEditorStore';
 import {
   serializePetJson,
@@ -8,37 +8,69 @@ import {
   createAlignedSpritesheet,
 } from '../../utils/petParser';
 
+interface ExportFormData {
+  id: string;
+  displayName: string;
+  description: string;
+  exportAligned: boolean;
+}
+
+// 默认导出表单值（不使用juzi）
+const DEFAULT_EXPORT_FORM: ExportFormData = {
+  id: 'new-pet',
+  displayName: 'New Pet',
+  description: 'A cute desktop pet for Codex.',
+  exportAligned: false,
+};
+
 export const Header: React.FC = () => {
   const { pet, spritesheet, frameOffsets } = useEditorStore();
-  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [formData, setFormData] = useState<ExportFormData>(DEFAULT_EXPORT_FORM);
 
-  const handleExportJson = () => {
-    if (!pet) return;
-    const json = serializePetJson(pet, frameOffsets);
-    downloadFile(json, `${pet.id || 'pet'}.json`, 'application/json');
-    setShowExportMenu(false);
-  };
+  // 打开对话框时，使用当前pet的数据填充表单
+  useEffect(() => {
+    if (showExportDialog && pet) {
+      setFormData({
+        id: pet.id || DEFAULT_EXPORT_FORM.id,
+        displayName: pet.displayName || DEFAULT_EXPORT_FORM.displayName,
+        description: pet.description || DEFAULT_EXPORT_FORM.description,
+        exportAligned: frameOffsets.size > 0,
+      });
+    }
+  }, [showExportDialog, pet, frameOffsets.size]);
 
-  const handleExportOriginalImage = () => {
-    if (!spritesheet) return;
+  const handleExport = () => {
+    if (!pet || !spritesheet) return;
 
-    const canvas = document.createElement('canvas');
-    canvas.width = spritesheet.naturalWidth;
-    canvas.height = spritesheet.naturalHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    // 更新pet数据
+    const updatedPet = {
+      ...pet,
+      id: formData.id,
+      displayName: formData.displayName,
+      description: formData.description,
+    };
 
-    ctx.drawImage(spritesheet, 0, 0);
-    downloadCanvasAsImage(canvas, 'spritesheet.webp', 'webp', 0.95);
-    setShowExportMenu(false);
-  };
+    // 导出JSON
+    const json = serializePetJson(updatedPet, frameOffsets);
+    downloadFile(json, `${formData.id}.json`, 'application/json');
 
-  const handleExportAlignedImage = () => {
-    if (!spritesheet || !pet) return;
+    // 导出图片
+    if (formData.exportAligned && frameOffsets.size > 0) {
+      const canvas = createAlignedSpritesheet(spritesheet, updatedPet, frameOffsets);
+      downloadCanvasAsImage(canvas, `${formData.id}.webp`, 'webp', 0.95);
+    } else {
+      const canvas = document.createElement('canvas');
+      canvas.width = spritesheet.naturalWidth;
+      canvas.height = spritesheet.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(spritesheet, 0, 0);
+        downloadCanvasAsImage(canvas, `${formData.id}.webp`, 'webp', 0.95);
+      }
+    }
 
-    const canvas = createAlignedSpritesheet(spritesheet, pet, frameOffsets);
-    downloadCanvasAsImage(canvas, 'spritesheet-aligned.webp', 'webp', 0.95);
-    setShowExportMenu(false);
+    setShowExportDialog(false);
   };
 
   return (
@@ -72,63 +104,107 @@ export const Header: React.FC = () => {
               </div>
 
               <button
-                onClick={handleExportJson}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                title="导出包含偏移数据的 JSON 文件"
+                onClick={() => setShowExportDialog(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                title="导出宠物文件"
               >
-                <FileJson size={18} />
-                导出 JSON
+                <Download size={18} />
+                导出
               </button>
-
-              <div className="relative">
-                <button
-                  onClick={() => setShowExportMenu(!showExportMenu)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                >
-                  <Image size={18} />
-                  导出图片
-                  <ChevronDown size={14} />
-                </button>
-
-                {showExportMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50">
-                    <button
-                      onClick={handleExportOriginalImage}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-left text-white hover:bg-gray-800 transition-colors rounded-t-lg"
-                    >
-                      <Download size={16} />
-                      <div>
-                        <div className="text-sm font-medium">原始精灵图</div>
-                        <div className="text-xs text-gray-400">直接导出原始图片</div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={handleExportAlignedImage}
-                      className={`w-full flex items-center gap-2 px-4 py-3 text-left text-white hover:bg-gray-800 transition-colors rounded-b-lg ${
-                        frameOffsets.size === 0 ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                      disabled={frameOffsets.size === 0}
-                    >
-                      <Download size={16} className={frameOffsets.size > 0 ? 'text-yellow-400' : ''} />
-                      <div>
-                        <div className="text-sm font-medium flex items-center gap-2">
-                          对齐后精灵图
-                          {frameOffsets.size > 0 && (
-                            <span className="text-yellow-400 text-xs">已应用偏移</span>
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          将偏移和缩放应用到每帧后导出
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                )}
-              </div>
             </>
           )}
         </div>
       </div>
+
+      {/* 导出对话框 */}
+      {showExportDialog && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
+              <h2 className="text-lg font-semibold text-white">导出宠物</h2>
+              <button
+                onClick={() => setShowExportDialog(false)}
+                className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                  ID
+                </label>
+                <input
+                  type="text"
+                  value={formData.id}
+                  onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="例如: boba"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                  显示名称
+                </label>
+                <input
+                  type="text"
+                  value={formData.displayName}
+                  onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="例如: Boba"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                  描述
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                  placeholder="例如: A tiny otter sipping bubble tea..."
+                />
+              </div>
+
+              {frameOffsets.size > 0 && (
+                <label className="flex items-center gap-3 p-3 bg-gray-900/50 rounded-lg cursor-pointer hover:bg-gray-900 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={formData.exportAligned}
+                    onChange={(e) => setFormData({ ...formData, exportAligned: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-800"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-white">导出对齐后的精灵图</span>
+                    <p className="text-xs text-gray-400 mt-0.5">应用 {frameOffsets.size} 个偏移到精灵图</p>
+                  </div>
+                </label>
+              )}
+            </div>
+
+            <div className="flex gap-3 px-5 py-4 border-t border-gray-700 bg-gray-850 rounded-b-xl">
+              <button
+                onClick={() => setShowExportDialog(false)}
+                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleExport}
+                disabled={!formData.id || !formData.displayName}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
+              >
+                <Check size={16} />
+                导出
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

@@ -9,7 +9,7 @@ interface FileUploadState {
 }
 
 export function useFileHandler() {
-  const { setPet, setSpritesheet, setFrameOffsetsFromMap, resetEditor } = useEditorStore();
+  const { pet, setPet, setSpritesheet, setSelectedAnimation, setSelectedFrame, setFrameOffsetsFromMap, resetEditor } = useEditorStore();
 
   const [state, setState] = useState<FileUploadState>({
     isDragging: false,
@@ -51,6 +51,10 @@ export function useFileHandler() {
           if (pet.frameOffsets) {
             setFrameOffsetsFromMap(frameOffsetsFromRecord(pet.frameOffsets));
           }
+          if (pet.animations.length > 0) {
+            setSelectedAnimation(pet.animations[0].name);
+            setSelectedFrame(0);
+          }
         } else if (jsonFile) {
           const jsonText = await jsonFile.text();
           const petData = JSON.parse(jsonText);
@@ -59,11 +63,19 @@ export function useFileHandler() {
           if (pet.frameOffsets) {
             setFrameOffsetsFromMap(frameOffsetsFromRecord(pet.frameOffsets));
           }
+          if (pet.animations.length > 0) {
+            setSelectedAnimation(pet.animations[0].name);
+            setSelectedFrame(0);
+          }
         } else if (imageFile) {
           const imageUrl = URL.createObjectURL(imageFile);
           const image = await loadImage(imageUrl);
           setSpritesheet(image);
           setPet(DEFAULT_PET);
+          if (DEFAULT_PET.animations.length > 0) {
+            setSelectedAnimation(DEFAULT_PET.animations[0].name);
+            setSelectedFrame(0);
+          }
         }
       } catch (error) {
         console.error('Failed to load files:', error);
@@ -87,11 +99,16 @@ export function useFileHandler() {
       const image = await loadImage('/pets/juzi/spritesheet.webp');
       setSpritesheet(image);
       setState((s) => ({ ...s, error: null }));
+
+      if (pet.animations.length > 0) {
+        setSelectedAnimation(pet.animations[0].name);
+        setSelectedFrame(0);
+      }
     } catch (error) {
       console.error('Failed to load sample pet:', error);
       setState((s) => ({ ...s, error: '加载示例宠物失败，请确保服务器已启动' }));
     }
-  }, [setPet, setSpritesheet, setFrameOffsetsFromMap]);
+  }, [setPet, setSpritesheet, setSelectedAnimation, setSelectedFrame, setFrameOffsetsFromMap]);
 
   return {
     ...state,
