@@ -62,7 +62,6 @@ export function useFileHandler() {
         } else if (imageFile) {
           const imageUrl = URL.createObjectURL(imageFile);
           const image = await loadImage(imageUrl);
-          URL.revokeObjectURL(imageUrl);
           setSpritesheet(image);
           setPet(DEFAULT_PET);
         }

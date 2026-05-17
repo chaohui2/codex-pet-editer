@@ -63,7 +63,6 @@ export async function loadPetFromFiles(
 
   const imageUrl = URL.createObjectURL(imageFile);
   const image = await loadImage(imageUrl);
-  URL.revokeObjectURL(imageUrl);
 
   return { pet, image };
 }
