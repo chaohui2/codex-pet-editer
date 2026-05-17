@@ -43,6 +43,9 @@ interface EditorStore extends EditorState {
   setZoom: (zoom: number) => void;
   setPan: (pan: { x: number; y: number }) => void;
   setFrameOffset: (frameKey: string, offset: FrameOffset) => void;
+  resetFrameOffset: (frameKey: string) => void;
+  resetAllFrameOffsets: () => void;
+  setFrameOffsetsFromMap: (offsets: Map<string, FrameOffset>) => void;
   setOnionSkinEnabled: (enabled: boolean) => void;
   setOnionSkinPrevFrames: (count: number) => void;
   setOnionSkinNextFrames: (count: number) => void;
@@ -76,6 +79,7 @@ export const useEditorStore = create<EditorStore>((set) => ({
   zoom: 1,
   pan: { x: 0, y: 0 },
   frameOffsets: new Map(),
+  alignmentStrategy: 'center',
   onionSkinEnabled: storedSettings.enabled,
   onionSkinPrevFrames: storedSettings.prevFrames,
   onionSkinNextFrames: storedSettings.nextFrames,
@@ -94,6 +98,14 @@ export const useEditorStore = create<EditorStore>((set) => ({
       newOffsets.set(frameKey, offset);
       return { frameOffsets: newOffsets };
     }),
+  resetFrameOffset: (frameKey) =>
+    set((state) => {
+      const newOffsets = new Map(state.frameOffsets);
+      newOffsets.delete(frameKey);
+      return { frameOffsets: newOffsets };
+    }),
+  resetAllFrameOffsets: () => set({ frameOffsets: new Map() }),
+  setFrameOffsetsFromMap: (offsets) => set({ frameOffsets: new Map(offsets) }),
   setOnionSkinEnabled: (onionSkinEnabled) => {
     set({ onionSkinEnabled });
     saveOnionSkinSettings({ onionSkinEnabled });
@@ -124,6 +136,7 @@ export const useEditorStore = create<EditorStore>((set) => ({
       zoom: 1,
       pan: { x: 0, y: 0 },
       frameOffsets: new Map(),
+      alignmentStrategy: 'center',
       onionSkinEnabled: false,
       onionSkinPrevFrames: 2,
       onionSkinNextFrames: 2,

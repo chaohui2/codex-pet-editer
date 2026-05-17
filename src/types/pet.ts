@@ -17,6 +17,7 @@ export interface PetData {
   rows: number;
   fps: number;
   animations: Animation[];
+  frameOffsets?: Record<string, FrameOffset>;
   tags?: string[];
   author?: string;
   version?: string;
@@ -25,7 +26,10 @@ export interface PetData {
 export interface FrameOffset {
   x: number;
   y: number;
+  scale: number;
 }
+
+export type AlignmentStrategy = 'center' | 'bottom' | 'top';
 
 export interface EditorState {
   pet: PetData | null;
@@ -36,6 +40,7 @@ export interface EditorState {
   zoom: number;
   pan: { x: number; y: number };
   frameOffsets: Map<string, FrameOffset>;
+  alignmentStrategy: AlignmentStrategy;
   onionSkinEnabled: boolean;
   onionSkinPrevFrames: number;
   onionSkinNextFrames: number;
@@ -53,7 +58,7 @@ export const DEFAULT_PET: PetData = {
   rows: 9,
   fps: 8,
   animations: [
-    { name: '待机', row: 0, frames: 6, loop: true, description: '中性的呼吸与眨眼循环' },
+    { name: '待机', row: 0, frames: 6, loop: true, description: '待机' },
     { name: '右跑', row: 1, frames: 8, loop: true, description: '向右奔跑' },
     { name: '左跑', row: 2, frames: 8, loop: true, description: '向左奔跑' },
     { name: '挥手', row: 3, frames: 4, loop: true, description: '挥手打招呼' },

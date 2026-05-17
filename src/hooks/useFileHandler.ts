@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useEditorStore } from '../store/useEditorStore';
-import { loadPetFromFiles, loadImage } from '../utils/petParser';
+import { loadPetFromFiles, loadImage, frameOffsetsFromRecord } from '../utils/petParser';
 import { DEFAULT_PET } from '../types/pet';
 
 interface FileUploadState {
@@ -9,7 +9,7 @@ interface FileUploadState {
 }
 
 export function useFileHandler() {
-  const { setPet, setSpritesheet, resetEditor } = useEditorStore();
+  const { setPet, setSpritesheet, setFrameOffsetsFromMap, resetEditor } = useEditorStore();
 
   const [state, setState] = useState<FileUploadState>({
     isDragging: false,
@@ -48,10 +48,17 @@ export function useFileHandler() {
           const { pet, image } = await loadPetFromFiles(jsonFile, imageFile);
           setPet(pet);
           setSpritesheet(image);
+          if (pet.frameOffsets) {
+            setFrameOffsetsFromMap(frameOffsetsFromRecord(pet.frameOffsets));
+          }
         } else if (jsonFile) {
           const jsonText = await jsonFile.text();
           const petData = JSON.parse(jsonText);
-          setPet({ ...DEFAULT_PET, ...petData });
+          const pet = { ...DEFAULT_PET, ...petData };
+          setPet(pet);
+          if (pet.frameOffsets) {
+            setFrameOffsetsFromMap(frameOffsetsFromRecord(pet.frameOffsets));
+          }
         } else if (imageFile) {
           const imageUrl = URL.createObjectURL(imageFile);
           const image = await loadImage(imageUrl);
@@ -71,7 +78,12 @@ export function useFileHandler() {
     try {
       const response = await fetch('/pets/juzi/pet.json');
       const petData = await response.json();
-      setPet({ ...DEFAULT_PET, ...petData });
+      const pet = { ...DEFAULT_PET, ...petData };
+      setPet(pet);
+
+      if (pet.frameOffsets) {
+        setFrameOffsetsFromMap(frameOffsetsFromRecord(pet.frameOffsets));
+      }
 
       const image = await loadImage('/pets/juzi/spritesheet.webp');
       setSpritesheet(image);
@@ -80,7 +92,7 @@ export function useFileHandler() {
       console.error('Failed to load sample pet:', error);
       setState((s) => ({ ...s, error: '加载示例宠物失败，请确保服务器已启动' }));
     }
-  }, [setPet, setSpritesheet]);
+  }, [setPet, setSpritesheet, setFrameOffsetsFromMap]);
 
   return {
     ...state,

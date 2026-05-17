@@ -55,7 +55,7 @@ pets/
 
 | 行号 | 状态名称 | 帧数 | 说明 |
 |------|----------|------|------|
-| 0 | `idle` | 6 帧 | 待机 - 中性的呼吸与眨眼循环 |
+| 0 | `idle` | 6 帧 | 待机 |
 | 1 | `running-right` | 8 帧 | 向右跑 |
 | 2 | `running-left` | 8 帧 | 向左跑 |
 | 3 | `waving` | 4 帧 | 挥手 |
@@ -100,7 +100,7 @@ pets/
             "row": 0,
             "frames": 6,
             "loop": true,
-            "description": "待机 - 中性的呼吸与眨眼循环"
+            "description": "待机"
         },
         {
             "name": "running-right",
