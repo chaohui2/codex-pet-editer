@@ -1,5 +1,11 @@
 import { create } from 'zustand';
 import { PetData, FrameOffset, EditorState } from '../types/pet';
+import {
+  replaceFrameInSpritesheet,
+  addFrameToAnimation,
+  deleteFrameFromAnimation,
+  canvasToImage,
+} from '../utils/frameOperations';
 
 // 从 localStorage 读取洋葱皮设置
 const getStoredOnionSkinSettings = () => {
@@ -37,6 +43,10 @@ const storedPanelWidth = getStoredPanelWidth();
 interface EditorStore extends EditorState {
   setPet: (pet: PetData | null) => void;
   setSpritesheet: (img: HTMLImageElement | null) => void;
+  setSpritesheetFromCanvas: (canvas: HTMLCanvasElement) => Promise<void>;
+  replaceSelectedFrame: (newImage: HTMLImageElement) => Promise<void>;
+  addFrameToAnimation: (animationName: string, frameImage?: HTMLImageElement | null) => Promise<void>;
+  deleteFrame: (animationName: string, frameIndex: number) => Promise<void>;
   setSelectedAnimation: (name: string | null) => void;
   setSelectedFrame: (frame: number) => void;
   setIsPlaying: (playing: boolean) => void;
@@ -70,7 +80,7 @@ const saveOnionSkinSettings = (state: Partial<EditorState>) => {
   }
 };
 
-export const useEditorStore = create<EditorStore>((set) => ({
+export const useEditorStore = create<EditorStore>((set, get) => ({
   pet: null,
   spritesheet: null,
   selectedAnimation: null,
@@ -126,6 +136,94 @@ export const useEditorStore = create<EditorStore>((set) => ({
       // 忽略错误
     }
   },
+
+  setSpritesheetFromCanvas: async (canvas: HTMLCanvasElement) => {
+    const newImage = await canvasToImage(canvas);
+    set({ spritesheet: newImage });
+  },
+
+  replaceSelectedFrame: async (newImage: HTMLImageElement) => {
+    const state = get();
+    if (!state.spritesheet || !state.pet || !state.selectedAnimation) {
+      throw new Error('缺少必要的状态：精灵图、宠物数据或选中的动画');
+    }
+
+    const canvas = replaceFrameInSpritesheet(
+      state.spritesheet,
+      state.pet,
+      state.selectedAnimation,
+      state.selectedFrame,
+      newImage
+    );
+
+    const updatedImage = await canvasToImage(canvas);
+    set({ spritesheet: updatedImage });
+  },
+
+  addFrameToAnimation: async (animationName: string, frameImage: HTMLImageElement | null = null) => {
+    const state = get();
+    if (!state.spritesheet || !state.pet) {
+      throw new Error('缺少必要的状态：精灵图或宠物数据');
+    }
+
+    const result = addFrameToAnimation(
+      state.spritesheet,
+      state.pet,
+      animationName,
+      frameImage
+    );
+
+    const updatedImage = await canvasToImage(result.canvas);
+    set({
+      spritesheet: updatedImage,
+      pet: result.pet,
+    });
+
+    if (state.selectedAnimation === animationName) {
+      const animation = result.pet.animations.find((a) => a.name === animationName);
+      if (animation) {
+        set({ selectedFrame: animation.frames - 1 });
+      }
+    }
+  },
+
+  deleteFrame: async (animationName: string, frameIndex: number) => {
+    const state = get();
+    if (!state.spritesheet || !state.pet) {
+      throw new Error('缺少必要的状态：精灵图或宠物数据');
+    }
+
+    const result = deleteFrameFromAnimation(
+      state.spritesheet,
+      state.pet,
+      animationName,
+      frameIndex
+    );
+
+    const updatedImage = await canvasToImage(result.canvas);
+
+    // 如果删除的是当前选中的帧，需要更新选中帧
+    let newSelectedFrame = state.selectedFrame;
+    if (state.selectedAnimation === animationName) {
+      const animation = result.pet.animations.find((a) => a.name === animationName);
+      if (animation) {
+        // 如果删除的是最后一帧，选中前一帧
+        if (frameIndex >= animation.frames) {
+          newSelectedFrame = Math.max(0, animation.frames - 1);
+        } else if (frameIndex <= state.selectedFrame) {
+          // 如果删除的帧在当前选中帧之前或就是当前帧，选中帧减1
+          newSelectedFrame = Math.max(0, state.selectedFrame - 1);
+        }
+      }
+    }
+
+    set({
+      spritesheet: updatedImage,
+      pet: result.pet,
+      selectedFrame: newSelectedFrame,
+    });
+  },
+
   resetEditor: () =>
     set({
       pet: null,

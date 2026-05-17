@@ -180,7 +180,7 @@ export const PropertiesPanel: React.FC = () => {
           <div className="flex justify-between text-xs">
             <span className="text-gray-400">帧尺寸</span>
             <span className="text-white font-mono">
-              {pet.frameWidth}×{pet.frameHeight}
+              {pet.frameWidth} × {pet.frameHeight}
             </span>
           </div>
           <div className="flex justify-between text-xs">

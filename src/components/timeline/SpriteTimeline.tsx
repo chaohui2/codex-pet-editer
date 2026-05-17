@@ -8,17 +8,42 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  Plus,
+  Trash2,
+  ImagePlus,
 } from 'lucide-react';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useAnimationPlayer } from '../../hooks/useAnimationPlayer';
 import { getFramePosition } from '../../utils/spriteUtils';
+import { loadImage } from '../../utils/petParser';
 
 export const SpriteTimeline: React.FC = () => {
-  const { pet, spritesheet, selectedAnimation, selectedFrame, setSelectedAnimation, setSelectedFrame } =
-    useEditorStore();
+  const {
+    pet,
+    spritesheet,
+    selectedAnimation,
+    selectedFrame,
+    setSelectedAnimation,
+    setSelectedFrame,
+    addFrameToAnimation,
+    replaceSelectedFrame,
+    deleteFrame,
+  } = useEditorStore();
   const { toggle, isPlaying, stepForward, stepBackward } = useAnimationPlayer();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const replaceFrameInputRef = useRef<HTMLInputElement>(null);
+  const addFrameInputRef = useRef<HTMLInputElement>(null);
   const [trackZoom, setTrackZoom] = useState(1);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    animationName: string;
+    frameIndex: number;
+  } | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{
+    animationName: string;
+    frameIndex: number;
+  } | null>(null);
 
   const frameSize = 80 * trackZoom;
 
@@ -45,6 +70,99 @@ export const SpriteTimeline: React.FC = () => {
       setSelectedFrame(0);
     }
   };
+
+  const handleContextMenu = (
+    e: React.MouseEvent,
+    animationName: string,
+    frameIndex: number
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!pet) return;
+    const animation = pet.animations.find((a) => a.name === animationName);
+    if (animation && animation.frames <= 1) return; // 至少保留1帧
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      animationName,
+      frameIndex,
+    });
+  };
+
+  const handleReplaceFrame = () => {
+    if (!contextMenu) return;
+    setSelectedAnimation(contextMenu.animationName);
+    setSelectedFrame(contextMenu.frameIndex);
+    setContextMenu(null);
+    replaceFrameInputRef.current?.click();
+  };
+
+  const handleAddFrame = () => {
+    if (!contextMenu) return;
+    setSelectedAnimation(contextMenu.animationName);
+    setContextMenu(null);
+    addFrameInputRef.current?.click();
+  };
+
+  const handleAddFrameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedAnimation) return;
+
+    try {
+      const url = URL.createObjectURL(file);
+      const img = await loadImage(url);
+      await addFrameToAnimation(selectedAnimation, img);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('添加帧失败:', error);
+    } finally {
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleReplaceFrameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = URL.createObjectURL(file);
+      const img = await loadImage(url);
+      await replaceSelectedFrame(img);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('替换帧失败:', error);
+    } finally {
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleDeleteFrameClick = () => {
+    if (!contextMenu) return;
+    setShowDeleteConfirm({
+      animationName: contextMenu.animationName,
+      frameIndex: contextMenu.frameIndex,
+    });
+    setContextMenu(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!showDeleteConfirm) return;
+    try {
+      await deleteFrame(showDeleteConfirm.animationName, showDeleteConfirm.frameIndex);
+    } catch (error) {
+      console.error('删除帧失败:', error);
+    } finally {
+      setShowDeleteConfirm(null);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setContextMenu(null);
+    };
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
 
   if (!pet || !spritesheet) {
     return (
@@ -203,6 +321,7 @@ export const SpriteTimeline: React.FC = () => {
                         <div
                           key={frameIndex}
                           onClick={() => handleFrameClick(animation.name, frameIndex)}
+                          onContextMenu={(e) => handleContextMenu(e, animation.name, frameIndex)}
                           className={`
                             relative cursor-pointer rounded transition-all shrink-0 overflow-hidden
                             ${
@@ -278,6 +397,80 @@ export const SpriteTimeline: React.FC = () => {
           共 {pet.animations.length} 个动画 · {pet.animations.reduce((sum, a) => sum + a.frames, 0)} 帧
         </div>
       </div>
+
+      {/* 右键菜单 */}
+      {contextMenu && (
+        <div
+          className="fixed z-50 bg-gray-800 border border-gray-600 rounded-lg shadow-xl py-1 min-w-[140px]"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={handleAddFrame}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-400 hover:bg-gray-700 transition-colors"
+          >
+            <Plus size={16} />
+            添加新帧
+          </button>
+          <button
+            onClick={handleReplaceFrame}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+          >
+            <ImagePlus size={16} />
+            替换帧
+          </button>
+          <button
+            onClick={handleDeleteFrameClick}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-gray-700 transition-colors"
+          >
+            <Trash2 size={16} />
+            删除帧
+          </button>
+        </div>
+      )}
+
+      {/* 删除确认对话框 */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl p-4 max-w-sm">
+            <h3 className="text-white text-sm font-medium mb-3">确认删除帧</h3>
+            <p className="text-gray-400 text-xs mb-4">
+              确定要删除动画「{showDeleteConfirm.animationName}」的第 {showDeleteConfirm.frameIndex + 1} 帧吗？此操作不可撤销。
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-3 py-1.5 text-xs bg-red-600 hover:bg-red-500 text-white rounded transition-colors"
+              >
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 隐藏的替换帧文件输入 */}
+      <input
+        ref={replaceFrameInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleReplaceFrameChange}
+        className="hidden"
+      />
+      {/* 隐藏的添加帧文件输入 */}
+      <input
+        ref={addFrameInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleAddFrameChange}
+        className="hidden"
+      />
     </div>
   );
 };
