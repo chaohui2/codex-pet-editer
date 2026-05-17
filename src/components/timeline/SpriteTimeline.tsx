@@ -1,7 +1,6 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   Clock,
-  GripVertical,
   Play,
   Pause,
   ChevronLeft,
@@ -63,7 +62,7 @@ export const SpriteTimeline: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-gray-900">
       {/* 顶部工具栏 */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-gray-800 border-b border-gray-700 shrink-0">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-gray-800 border-b border-gray-700 shrink-0">
         <div className="flex items-center gap-4">
           {/* 播放控制 */}
           <div className="flex items-center gap-1 bg-gray-900 rounded-lg p-1">
@@ -126,10 +125,10 @@ export const SpriteTimeline: React.FC = () => {
       </div>
 
       {/* 帧刻度 */}
-      <div className="relative h-8 bg-gray-850 border-b border-gray-700 shrink-0 overflow-hidden">
+      <div className="relative h-6 bg-gray-850 border-b border-gray-700 shrink-0 overflow-hidden">
         <div
           className="absolute top-0 left-0 h-full flex items-end"
-          style={{ paddingLeft: '180px' }}
+          style={{ paddingLeft: '120px' }}
         >
           {Array.from({ length: maxFrames }).map((_, i) => (
             <div
@@ -170,11 +169,10 @@ export const SpriteTimeline: React.FC = () => {
               >
                 {/* 轨道头部 */}
                 <div
-                  className="flex items-center gap-2 px-3 py-2 border-r border-gray-700 bg-gray-800/90 cursor-pointer shrink-0 sticky left-0 z-10"
-                  style={{ width: '180px' }}
+                  className="flex items-center gap-1.5 px-2 py-1.5 border-r border-gray-700 bg-gray-800/90 cursor-pointer shrink-0 sticky left-0 z-10"
+                  style={{ width: '120px' }}
                   onClick={() => handleTrackClick(animation.name)}
                 >
-                  <GripVertical size={14} className="text-gray-500" />
                   <div className="flex-1 min-w-0">
                     <div
                       className={`text-xs font-medium truncate ${
@@ -190,7 +188,7 @@ export const SpriteTimeline: React.FC = () => {
                 </div>
 
                 {/* 轨道内容 - 精灵图帧序列 */}
-                <div className="relative flex-1 py-2 px-2 min-w-0">
+                <div className="relative flex-1 py-1.5 px-1.5 min-w-0">
                   <div className="relative flex gap-1">
                     {Array.from({ length: animation.frames }).map((_, frameIndex) => {
                       const isCurrentFrame = isSelected && selectedFrame === frameIndex;
@@ -272,7 +270,7 @@ export const SpriteTimeline: React.FC = () => {
       </div>
 
       {/* 底部状态栏 */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-800 border-t border-gray-700 shrink-0">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-gray-800 border-t border-gray-700 shrink-0">
         <div className="text-xs text-gray-400">
           {pet.displayName} · {pet.frameWidth} × {pet.frameHeight}
         </div>

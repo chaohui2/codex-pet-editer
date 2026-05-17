@@ -1,5 +1,4 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { PetData } from '../types/pet';
 import { useEditorStore } from '../store/useEditorStore';
 
 export function useAnimationPlayer() {

@@ -10,6 +10,9 @@ interface EditorStore extends EditorState {
   setZoom: (zoom: number) => void;
   setPan: (pan: { x: number; y: number }) => void;
   setFrameOffset: (frameKey: string, offset: FrameOffset) => void;
+  setOnionSkinEnabled: (enabled: boolean) => void;
+  setOnionSkinPrevFrames: (count: number) => void;
+  setOnionSkinNextFrames: (count: number) => void;
   resetEditor: () => void;
 }
 
@@ -22,6 +25,9 @@ export const useEditorStore = create<EditorStore>((set) => ({
   zoom: 1,
   pan: { x: 0, y: 0 },
   frameOffsets: new Map(),
+  onionSkinEnabled: false,
+  onionSkinPrevFrames: 2,
+  onionSkinNextFrames: 2,
 
   setPet: (pet) => set({ pet }),
   setSpritesheet: (spritesheet) => set({ spritesheet }),
@@ -36,6 +42,9 @@ export const useEditorStore = create<EditorStore>((set) => ({
       newOffsets.set(frameKey, offset);
       return { frameOffsets: newOffsets };
     }),
+  setOnionSkinEnabled: (onionSkinEnabled) => set({ onionSkinEnabled }),
+  setOnionSkinPrevFrames: (onionSkinPrevFrames) => set({ onionSkinPrevFrames }),
+  setOnionSkinNextFrames: (onionSkinNextFrames) => set({ onionSkinNextFrames }),
   resetEditor: () =>
     set({
       pet: null,
@@ -46,5 +55,8 @@ export const useEditorStore = create<EditorStore>((set) => ({
       zoom: 1,
       pan: { x: 0, y: 0 },
       frameOffsets: new Map(),
+      onionSkinEnabled: false,
+      onionSkinPrevFrames: 2,
+      onionSkinNextFrames: 2,
     }),
 }));
