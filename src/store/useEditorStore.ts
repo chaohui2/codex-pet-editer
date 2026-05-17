@@ -35,7 +35,7 @@ const getStoredPanelWidth = () => {
   } catch (e) {
     // 忽略错误
   }
-  return 240;
+  return 600;
 };
 
 const storedSettings = getStoredOnionSkinSettings();
