@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Cat, Download, X, Check, Plus, Trash2 } from 'lucide-react';
+import { Cat, Download, X, Check, Plus, Trash2, Globe } from 'lucide-react';
 import { useEditorStore } from '../../store/useEditorStore';
 import {
   serializePetJson,
@@ -7,6 +7,7 @@ import {
   downloadPetAsZip,
 } from '../../utils/petParser';
 import { NewPetAnimationConfig, DEFAULT_PET } from '../../types/pet';
+import { useLanguage } from '../../i18n';
 
 interface ExportFormData {
   id: string;
@@ -44,6 +45,7 @@ const DEFAULT_NEW_PET_FORM: NewPetFormData = {
 
 export const Header: React.FC = () => {
   const { pet, spritesheet, frameOffsets, createNewPet } = useEditorStore();
+  const { t, currentLanguage, toggleLanguage } = useLanguage();
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [formData, setFormData] = useState<ExportFormData>(DEFAULT_EXPORT_FORM);
@@ -109,19 +111,27 @@ export const Header: React.FC = () => {
             <Cat className="text-white" size={24} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Codex Pet 编辑器</h1>
-            <p className="text-gray-400 text-sm">桌面宠物精灵图编辑工具</p>
+            <h1 className="text-xl font-bold text-white">{t('header.title')}</h1>
+            <p className="text-gray-400 text-sm">{t('header.subtitle')}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button
+            onClick={toggleLanguage}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+            title="Toggle Language"
+          >
+            <Globe size={18} />
+            {currentLanguage.toUpperCase()}
+          </button>
+          <button
             onClick={() => setShowNewDialog(true)}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-            title="新建宠物"
+            title={t('header.newTooltip')}
           >
             <Plus size={18} />
-            新建
+            {t('header.new')}
           </button>
 
           {pet && (
@@ -131,11 +141,11 @@ export const Header: React.FC = () => {
                 <span className="text-gray-500 mx-2">·</span>
                 <span>{pet.frameWidth} × {pet.frameHeight}</span>
                 <span className="text-gray-500 mx-2">·</span>
-                <span>{pet.animations.length} 动画</span>
+                <span>{pet.animations.length} {t('common.animations')}</span>
                 {frameOffsets.size > 0 && (
                   <>
                     <span className="text-gray-500 mx-2">·</span>
-                    <span className="text-yellow-400">{frameOffsets.size} 偏移</span>
+                    <span className="text-yellow-400">{frameOffsets.size} {t('common.offsets')}</span>
                   </>
                 )}
               </div>
@@ -143,22 +153,22 @@ export const Header: React.FC = () => {
               <button
                 onClick={() => setShowExportDialog(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                title="导出宠物文件"
+                title={t('header.export')}
               >
                 <Download size={18} />
-                导出
+                {t('header.export')}
               </button>
             </>
           )}
         </div>
       </div>
 
-      {/* 导出对话框 */}
+      {/* Export Dialog */}
       {showExportDialog && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-md mx-4">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
-              <h2 className="text-lg font-semibold text-white">导出宠物</h2>
+              <h2 className="text-lg font-semibold text-white">{t('header.exportDialog.title')}</h2>
               <button
                 onClick={() => setShowExportDialog(false)}
                 className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
@@ -170,40 +180,40 @@ export const Header: React.FC = () => {
             <div className="p-5 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                  ID
+                  {t('header.exportDialog.id')}
                 </label>
                 <input
                   type="text"
                   value={formData.id}
                   onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                   className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  placeholder="例如: boba"
+                  placeholder={t('header.exportDialog.idPlaceholder')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                  显示名称
+                  {t('header.exportDialog.displayName')}
                 </label>
                 <input
                   type="text"
                   value={formData.displayName}
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                   className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  placeholder="例如: Boba"
+                  placeholder="Boba"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                  描述
+                  {t('header.exportDialog.description')}
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
                   className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
-                  placeholder="例如: A tiny otter sipping bubble tea..."
+                  placeholder={t('header.exportDialog.descriptionPlaceholder')}
                 />
               </div>
 
@@ -216,8 +226,8 @@ export const Header: React.FC = () => {
                     className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-gray-800"
                   />
                   <div>
-                    <span className="text-sm font-medium text-white">导出对齐后的精灵图</span>
-                    <p className="text-xs text-gray-400 mt-0.5">应用 {frameOffsets.size} 个偏移到精灵图</p>
+                    <span className="text-sm font-medium text-white">{t('header.exportDialog.exportAligned')}</span>
+                    <p className="text-xs text-gray-400 mt-0.5">{t('header.exportDialog.exportAlignedDesc', { count: frameOffsets.size })}</p>
                   </div>
                 </label>
               )}
@@ -228,7 +238,7 @@ export const Header: React.FC = () => {
                 onClick={() => setShowExportDialog(false)}
                 className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium"
               >
-                取消
+                {t('header.exportDialog.cancel')}
               </button>
               <button
                 onClick={handleExport}
@@ -236,19 +246,19 @@ export const Header: React.FC = () => {
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
               >
                 <Check size={16} />
-                导出
+                {t('header.exportDialog.export')}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 新建对话框 */}
+      {/* New Pet Dialog */}
       {showNewDialog && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
-              <h2 className="text-lg font-semibold text-white">新建宠物</h2>
+              <h2 className="text-lg font-semibold text-white">{t('header.newDialog.title')}</h2>
               <button
                 onClick={() => setShowNewDialog(false)}
                 className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
@@ -261,7 +271,7 @@ export const Header: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                    帧宽度
+                    {t('header.newDialog.frameWidth')}
                   </label>
                   <input
                     type="number"
@@ -273,7 +283,7 @@ export const Header: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                    帧高度
+                    {t('header.newDialog.frameHeight')}
                   </label>
                   <input
                     type="number"
@@ -287,7 +297,7 @@ export const Header: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                  列数（每行最大帧数）
+                  {t('header.newDialog.columns')}
                 </label>
                 <input
                   type="number"
@@ -301,13 +311,13 @@ export const Header: React.FC = () => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-300">
-                    动画集合
+                    {t('header.newDialog.animations')}
                   </label>
                   <button
                     onClick={() => setNewFormData({
                       ...newFormData,
                       animations: [...newFormData.animations, {
-                        name: `动画${newFormData.animations.length + 1}`,
+                        name: `Animation ${newFormData.animations.length + 1}`,
                         frames: 4,
                         loop: true,
                         description: '',
@@ -315,7 +325,7 @@ export const Header: React.FC = () => {
                     })}
                     className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors"
                   >
-                    + 添加动画
+                    {t('header.newDialog.addAnimation')}
                   </button>
                 </div>
 
@@ -334,7 +344,7 @@ export const Header: React.FC = () => {
                           setNewFormData({ ...newFormData, animations: newAnims });
                         }}
                         className="flex-1 px-2 py-1 bg-gray-800 border border-gray-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
-                        placeholder="动画名称"
+                        placeholder={t('header.newDialog.animationName')}
                       />
                       <input
                         type="number"
@@ -358,7 +368,7 @@ export const Header: React.FC = () => {
                           }}
                           className="w-3 h-3 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
                         />
-                        循环
+                        {t('header.newDialog.loop')}
                       </label>
                       {newFormData.animations.length > 1 && (
                         <button
@@ -382,7 +392,7 @@ export const Header: React.FC = () => {
                 onClick={() => setShowNewDialog(false)}
                 className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium"
               >
-                取消
+                {t('header.newDialog.cancel')}
               </button>
               <button
                 onClick={handleCreateNew}
@@ -390,7 +400,7 @@ export const Header: React.FC = () => {
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
               >
                 <Check size={16} />
-                创建
+                {t('header.newDialog.create')}
               </button>
             </div>
           </div>

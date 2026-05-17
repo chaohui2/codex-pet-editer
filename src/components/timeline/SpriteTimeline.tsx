@@ -16,8 +16,10 @@ import { useEditorStore } from '../../store/useEditorStore';
 import { useAnimationPlayer } from '../../hooks/useAnimationPlayer';
 import { getFramePosition } from '../../utils/spriteUtils';
 import { loadImage } from '../../utils/petParser';
+import { useLanguage } from '../../i18n';
 
 export const SpriteTimeline: React.FC = () => {
+  const { t } = useLanguage();
   const {
     pet,
     spritesheet,
@@ -169,7 +171,7 @@ export const SpriteTimeline: React.FC = () => {
       <div className="flex-1 flex items-center justify-center bg-gray-900">
         <div className="text-center">
           <Maximize2 className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400">加载宠物数据以显示时间轴</p>
+          <p className="text-gray-400">{t('timeline.selectAnimation')}</p>
         </div>
       </div>
     );
@@ -187,27 +189,27 @@ export const SpriteTimeline: React.FC = () => {
             <button
               onClick={stepBackward}
               className="p-1.5 rounded hover:bg-gray-700 text-gray-300 transition-colors"
-              title="上一帧"
+              title={t('timeline.prevFrame')}
             >
               <ChevronLeft size={18} />
             </button>
             <button
               onClick={toggle}
               className="p-2 rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-              title={isPlaying ? '暂停' : '播放'}
+              title={isPlaying ? t('timeline.pause') : t('timeline.play')}
             >
               {isPlaying ? <Pause size={18} /> : <Play size={18} />}
             </button>
             <button
               onClick={stepForward}
               className="p-1.5 rounded hover:bg-gray-700 text-gray-300 transition-colors"
-              title="下一帧"
+              title={t('timeline.nextFrame')}
             >
               <ChevronRight size={18} />
             </button>
           </div>
 
-          {/* 当前帧信息 */}
+          {/* Current frame info */}
           <div className="flex items-center gap-2 text-sm">
             <Clock size={14} className="text-gray-400" />
             <span className="text-white font-mono">
@@ -215,7 +217,7 @@ export const SpriteTimeline: React.FC = () => {
                 ? `${selectedAnimation}: ${selectedFrame + 1}/${
                     pet.animations.find((a) => a.name === selectedAnimation)?.frames || 0
                   }`
-                : '选择动画'}
+                : t('timeline.selectAnimation')}
             </span>
             <span className="text-gray-500">| {pet.fps} FPS</span>
           </div>
@@ -225,7 +227,7 @@ export const SpriteTimeline: React.FC = () => {
           <button
             onClick={() => setTrackZoom(Math.max(0.5, trackZoom - 0.25))}
             className="p-1.5 rounded hover:bg-gray-700 text-gray-300 transition-colors"
-            title="缩小"
+            title={t('timeline.zoomOut')}
           >
             <ZoomOut size={16} />
           </button>
@@ -235,7 +237,7 @@ export const SpriteTimeline: React.FC = () => {
           <button
             onClick={() => setTrackZoom(Math.min(2.5, trackZoom + 0.25))}
             className="p-1.5 rounded hover:bg-gray-700 text-gray-300 transition-colors"
-            title="放大"
+            title={t('timeline.zoomIn')}
           >
             <ZoomIn size={16} />
           </button>
@@ -300,7 +302,7 @@ export const SpriteTimeline: React.FC = () => {
                       {animation.name}
                     </div>
                     <div className="text-[10px] text-gray-500">
-                      {animation.frames} 帧
+                      {animation.frames} {t('common.frames')}
                     </div>
                   </div>
                 </div>
@@ -394,7 +396,10 @@ export const SpriteTimeline: React.FC = () => {
           {pet.displayName} · {pet.frameWidth} × {pet.frameHeight}
         </div>
         <div className="text-xs text-gray-400">
-          共 {pet.animations.length} 个动画 · {pet.animations.reduce((sum, a) => sum + a.frames, 0)} 帧
+          {t('timeline.status.total', {
+            animationCount: pet.animations.length,
+            totalFrames: pet.animations.reduce((sum, a) => sum + a.frames, 0)
+          })}
         </div>
       </div>
 
@@ -410,45 +415,48 @@ export const SpriteTimeline: React.FC = () => {
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-400 hover:bg-gray-700 transition-colors"
           >
             <Plus size={16} />
-            添加新帧
+            {t('timeline.addFrame')}
           </button>
           <button
             onClick={handleReplaceFrame}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
           >
             <ImagePlus size={16} />
-            替换帧
+            {t('timeline.replaceFrame')}
           </button>
           <button
             onClick={handleDeleteFrameClick}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-gray-700 transition-colors"
           >
             <Trash2 size={16} />
-            删除帧
+            {t('timeline.deleteFrame')}
           </button>
         </div>
       )}
 
-      {/* 删除确认对话框 */}
+      {/* Delete Confirmation Dialog */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl p-4 max-w-sm">
-            <h3 className="text-white text-sm font-medium mb-3">确认删除帧</h3>
+            <h3 className="text-white text-sm font-medium mb-3">{t('timeline.deleteConfirm.title')}</h3>
             <p className="text-gray-400 text-xs mb-4">
-              确定要删除动画「{showDeleteConfirm.animationName}」的第 {showDeleteConfirm.frameIndex + 1} 帧吗？此操作不可撤销。
+              {t('timeline.deleteConfirm.message', {
+                animationName: showDeleteConfirm.animationName,
+                frameIndex: showDeleteConfirm.frameIndex + 1
+              })}
             </p>
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setShowDeleteConfirm(null)}
                 className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleConfirmDelete}
                 className="px-3 py-1.5 text-xs bg-red-600 hover:bg-red-500 text-white rounded transition-colors"
               >
-                确认删除
+                {t('common.delete')}
               </button>
             </div>
           </div>

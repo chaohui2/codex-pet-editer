@@ -3,8 +3,10 @@ import { Play, Pause, SkipBack, SkipForward, Maximize2, Move } from 'lucide-reac
 import { useEditorStore } from '../../store/useEditorStore';
 import { useAnimationPlayer } from '../../hooks/useAnimationPlayer';
 import { getFramePosition, getFrameKey, getDefaultFrameOffset } from '../../utils/spriteUtils';
+import { useLanguage } from '../../i18n';
 
 export const PreviewPlayer: React.FC = () => {
+  const { t } = useLanguage();
   const {
     pet,
     spritesheet,
@@ -320,7 +322,7 @@ export const PreviewPlayer: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center h-24 bg-gray-900 rounded-lg border border-gray-700">
         <Maximize2 className="w-6 h-6 text-gray-500 mb-1" />
-        <p className="text-gray-400 text-[10px]">在时间轴选择动画</p>
+        <p className="text-gray-400 text-[10px]">{t('preview.selectAnimation')}</p>
       </div>
     );
   }
@@ -367,7 +369,7 @@ export const PreviewPlayer: React.FC = () => {
             className={`p-1 rounded ${
               showOffset ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'
             } hover:bg-gray-600 transition-colors`}
-            title="显示偏移参考线"
+            title={t('preview.showOffsetGuide')}
           >
             <Move size={12} />
           </button>
@@ -382,7 +384,7 @@ export const PreviewPlayer: React.FC = () => {
                 : 'bg-gray-700 hover:bg-yellow-600 text-yellow-400 hover:text-white'
             }`}
             onMouseDown={handleScaleMouseDown}
-            title="拖拽调整大小"
+            title={t('preview.dragToResize')}
           >
             <svg
               width="16"
@@ -402,34 +404,34 @@ export const PreviewPlayer: React.FC = () => {
           <button
             onClick={stepBackward}
             className="p-1 rounded hover:bg-gray-700 text-gray-300 transition-colors"
-            title="上一帧"
+            title={t('preview.prevFrame')}
           >
             <SkipBack size={12} />
           </button>
           <button
             onClick={toggle}
             className="p-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-            title={isPlaying ? '暂停' : '播放'}
+            title={isPlaying ? t('preview.pause') : t('preview.play')}
           >
             {isPlaying ? <Pause size={14} /> : <Play size={14} />}
           </button>
           <button
             onClick={stepForward}
             className="p-1 rounded hover:bg-gray-700 text-gray-300 transition-colors"
-            title="下一帧"
+            title={t('preview.nextFrame')}
           >
             <SkipForward size={12} />
           </button>
         </div>
 
         <div className="text-center text-gray-400 text-[10px]">
-          帧: {selectedFrame + 1}/{animation.frames}
+          {t('preview.frame', { current: selectedFrame + 1, total: animation.frames })}
         </div>
 
-        {/* 快捷键提示 */}
+        {/* Shortcut Hints */}
         <div className="mt-2 pt-2 border-t border-gray-700">
           <p className="text-gray-500 text-[9px] text-center">
-            ↑↓←→ 移动 | Shift+方向键 快移 | Alt+滚轮 缩放 | R 重置
+            {t('properties.shortcuts.move')} | {t('properties.shortcuts.fastMove')} | {t('properties.shortcuts.scale')} | {t('properties.shortcuts.reset')}
           </p>
         </div>
       </div>
