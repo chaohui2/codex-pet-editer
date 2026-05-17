@@ -9,7 +9,7 @@ interface FileUploadState {
 }
 
 export function useFileHandler() {
-  const { pet, setPet, setSpritesheet, setSelectedAnimation, setSelectedFrame, setFrameOffsetsFromMap, resetEditor } = useEditorStore();
+  const { setPet, setSpritesheet, setSelectedAnimation, setSelectedFrame, setFrameOffsetsFromMap, resetEditor } = useEditorStore();
 
   const [state, setState] = useState<FileUploadState>({
     isDragging: false,

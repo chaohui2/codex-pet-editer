@@ -3,9 +3,8 @@ import { Cat, Download, X, Check } from 'lucide-react';
 import { useEditorStore } from '../../store/useEditorStore';
 import {
   serializePetJson,
-  downloadFile,
-  downloadCanvasAsImage,
   createAlignedSpritesheet,
+  downloadPetAsZip,
 } from '../../utils/petParser';
 
 interface ExportFormData {
@@ -40,7 +39,7 @@ export const Header: React.FC = () => {
     }
   }, [showExportDialog, pet, frameOffsets.size]);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (!pet || !spritesheet) return;
 
     // 更新pet数据
@@ -53,22 +52,23 @@ export const Header: React.FC = () => {
 
     // 导出JSON
     const json = serializePetJson(updatedPet, frameOffsets);
-    downloadFile(json, `${formData.id}.json`, 'application/json');
 
     // 导出图片
+    let canvas: HTMLCanvasElement;
     if (formData.exportAligned && frameOffsets.size > 0) {
-      const canvas = createAlignedSpritesheet(spritesheet, updatedPet, frameOffsets);
-      downloadCanvasAsImage(canvas, `${formData.id}.webp`, 'webp', 0.95);
+      canvas = createAlignedSpritesheet(spritesheet, updatedPet, frameOffsets);
     } else {
-      const canvas = document.createElement('canvas');
+      canvas = document.createElement('canvas');
       canvas.width = spritesheet.naturalWidth;
       canvas.height = spritesheet.naturalHeight;
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(spritesheet, 0, 0);
-        downloadCanvasAsImage(canvas, `${formData.id}.webp`, 'webp', 0.95);
       }
     }
+
+    // 导出为 zip 文件
+    await downloadPetAsZip(json, canvas, formData.id, 0.95);
 
     setShowExportDialog(false);
   };

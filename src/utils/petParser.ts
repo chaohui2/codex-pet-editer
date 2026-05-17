@@ -1,5 +1,6 @@
 import { PetData, FrameOffset, DEFAULT_PET } from '../types/pet';
 import { getFramePosition, getFrameKey, getDefaultFrameOffset } from './spriteUtils';
+import JSZip from 'jszip';
 
 export function parsePetJson(json: string): PetData {
   const data = JSON.parse(json);
@@ -103,6 +104,47 @@ export function downloadCanvasAsImage(
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+}
+
+/**
+ * 导出宠物为 zip 文件
+ * @param petJson 宠物 JSON 字符串
+ * @param canvas 精灵图 Canvas
+ * @param folderId 文件夹名称（使用宠物 ID）
+ * @param imageQuality 图片质量 (0-1)
+ */
+export async function downloadPetAsZip(
+  petJson: string,
+  canvas: HTMLCanvasElement,
+  folderId: string,
+  imageQuality: number = 0.95
+) {
+  const zip = new JSZip();
+  const folder = zip.folder(folderId);
+  if (!folder) throw new Error('无法创建 zip 文件夹');
+
+  // 添加 pet.json
+  folder.file('pet.json', petJson);
+
+  // 添加 spritesheet.webp
+  const webpBlob = await new Promise<Blob>((resolve) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else throw new Error('无法创建 webp blob');
+    }, 'image/webp', imageQuality);
+  });
+  folder.file('spritesheet.webp', webpBlob);
+
+  // 生成并下载 zip
+  const zipContent = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(zipContent);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${folderId}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 export function createAlignedSpritesheet(
